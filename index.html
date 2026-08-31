@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learn Well with AI Audio</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.5;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      margin-bottom: 30px;
+      color: #555;
+    }
+
+    .audio-item {
+      border-bottom: 1px solid #ddd;
+      padding: 16px 0;
+    }
+
+    .filename {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    audio {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    a,
+    button {
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 6px 10px;
+    }
+
+    .status {
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Learn Well with AI Audio</h1>
+
+  <p class="subtitle">
+    Audio files currently available in the repository.
+  </p>
+
+  <div id="audio-list">
+    <p class="status">Loading audio files...</p>
+  </div>
+
+  <script>
+    const username = "bituin";
+    const repo = "learn-well-with-ai-audio";
+
+    const githubAPI =
+      `https://api.github.com/repos/${username}/${repo}/contents/`;
+
+    const pagesBase =
+      `https://${username}.github.io/${repo}/`;
+
+    fetch(githubAPI)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Could not load repository.");
+        }
+
+        return response.json();
+      })
+
+      .then(files => {
+
+        const mp3s = files
+          .filter(file =>
+            file.type === "file" &&
+            file.name.toLowerCase().endsWith(".mp3")
+          )
+          .sort((a, b) =>
+            a.name.localeCompare(
+              b.name,
+              undefined,
+              {
+                numeric: true,
+                sensitivity: "base"
+              }
+            )
+          );
+
+        const container =
+          document.getElementById("audio-list");
+
+        container.innerHTML = "";
+
+        if (mp3s.length === 0) {
+          container.innerHTML =
+            "<p>No MP3 files found.</p>";
+
+          return;
+        }
+
+        mp3s.forEach(file => {
+
+          const publicURL =
+            pagesBase +
+            encodeURIComponent(file.name);
+
+          const item =
+            document.createElement("div");
+
+          item.className = "audio-item";
+
+          item.innerHTML = `
+            <div class="filename">
+              ${file.name}
+            </div>
+
+            <audio controls preload="none">
+              <source src="${publicURL}" type="audio/mpeg">
+              Your browser does not support audio playback.
+            </audio>
+
+            <div class="actions">
+
+              <a
+                href="${publicURL}"
+                target="_blank"
+              >
+                Open MP3
+              </a>
+
+              <button
+                onclick="copyURL('${publicURL}', this)"
+              >
+                Copy URL
+              </button>
+
+            </div>
+          `;
+
+          container.appendChild(item);
+
+        });
+
+      })
+
+      .catch(error => {
+
+        console.error(error);
+
+        document.getElementById(
+          "audio-list"
+        ).innerHTML =
+          "<p>Could not load the audio files.</p>";
+
+      });
+
+
+    function copyURL(url, button) {
+
+      navigator.clipboard
+        .writeText(url)
+        .then(() => {
+
+          const original =
+            button.textContent;
+
+          button.textContent =
+            "Copied!";
+
+          setTimeout(() => {
+
+            button.textContent =
+              original;
+
+          }, 1200);
+
+        });
+
+    }
+  </script>
+
+</body>
+</html>
